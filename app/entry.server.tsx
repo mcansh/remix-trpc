@@ -18,7 +18,7 @@ export default function handleRequest(
     const { pipe, abort } = renderToPipeableStream(
       <RemixServer context={remixContext} url={request.url} />,
       {
-        onShellReady: () => {
+        onShellReady() {
           const body = new PassThrough();
 
           responseHeaders.set("Content-Type", "text/html");
@@ -32,12 +32,11 @@ export default function handleRequest(
 
           pipe(body);
         },
-        onShellError: (err) => {
-          reject(err);
+        onShellError(error) {
+          reject(error);
         },
-        onError: (error) => {
+        onError(error) {
           didError = true;
-
           console.error(error);
         },
       }

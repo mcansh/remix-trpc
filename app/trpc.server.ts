@@ -4,25 +4,27 @@ import { z } from "zod";
 
 export const t = initTRPC.create();
 
-interface User {
+export interface User {
   id: string;
   name: string;
-}
-
-declare global {
-  var __userList__: Array<User>;
+  createdAt: string;
 }
 
 function id() {
   return crypto.randomBytes(16).toString("hex");
 }
 
-let userList = [
+let userList: Array<User> = [
   {
     id: id(),
     name: "Logan",
+    createdAt: new Date().toISOString(),
   },
 ];
+
+declare global {
+  var __userList__: Array<User>;
+}
 
 if (!global.__userList__) {
   global.__userList__ = userList;
@@ -46,6 +48,7 @@ export const appRouter = t.router({
         userList.push({
           id: id(),
           name: req.input.name,
+          createdAt: new Date().toISOString(),
         });
 
         return userList;
