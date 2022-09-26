@@ -11,10 +11,10 @@
     "start": "remix-serve build"
   },
   "dependencies": {
-    "@remix-run/node": "0.0.0-experimental-e18af792a",
-    "@remix-run/react": "0.0.0-experimental-e18af792a",
-    "@remix-run/serve": "0.0.0-experimental-e18af792a",
-    "@tanstack/react-query": "4.3.9",
+    "@remix-run/node": "^1.7.2",
+    "@remix-run/react": "^1.7.2",
+    "@remix-run/serve": "^1.7.2",
+    "@tanstack/react-query": "4.6.0",
     "@trpc/client": "10.0.0-proxy-beta.1",
     "@trpc/react": "10.0.0-proxy-beta.1",
     "@trpc/server": "10.0.0-proxy-beta.1",
@@ -24,8 +24,8 @@
     "zod": "3.19.1"
   },
   "devDependencies": {
-    "@remix-run/dev": "0.0.0-experimental-e18af792a",
-    "@remix-run/eslint-config": "0.0.0-experimental-e18af792a",
+    "@remix-run/dev": "^1.7.2",
+    "@remix-run/eslint-config": "^1.7.2",
     "@tailwindcss/forms": "0.5.3",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
