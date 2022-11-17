@@ -4,9 +4,9 @@ import { z } from "zod";
 
 export const t = initTRPC.create();
 
-export interface User {
+export interface Todo {
   id: string;
-  name: string;
+  label: string;
   createdAt: string;
 }
 
@@ -14,44 +14,44 @@ function id() {
   return crypto.randomBytes(16).toString("hex");
 }
 
-let userList: Array<User> = [
+let todoList: Array<Todo> = [
   {
     id: id(),
-    name: "Logan",
+    label: "walk the dog",
     createdAt: new Date().toISOString(),
   },
 ];
 
 declare global {
-  var __userList__: Array<User>;
+  var __todoList__: Array<Todo>;
 }
 
-if (!global.__userList__) {
-  global.__userList__ = userList;
+if (!global.__todoList__) {
+  global.__todoList__ = todoList;
 } else {
-  userList = global.__userList__;
+  todoList = global.__todoList__;
 }
 
 export const appRouter = t.router({
-  users: t.router({
+  todos: t.router({
     list: t.procedure.query(() => {
-      return userList;
+      return todoList;
     }),
 
     getById: t.procedure.input(z.string()).query((req) => {
-      return userList.find((user) => user.id === req.input);
+      return todoList.find((todo) => todo.id === req.input);
     }),
 
     create: t.procedure
-      .input(z.object({ name: z.string().min(5) }))
+      .input(z.object({ label: z.string().min(5) }))
       .mutation(async (req) => {
-        userList.push({
+        todoList.push({
           id: id(),
-          name: req.input.name,
+          label: req.input.label,
           createdAt: new Date().toISOString(),
         });
 
-        return userList;
+        return todoList;
       }),
   }),
 });

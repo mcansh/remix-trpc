@@ -1,5 +1,5 @@
 import type { SerializeFrom } from "@remix-run/node";
-import type { User } from "~/trpc.server";
+import type { Todo } from "~/trpc.server";
 
 export const buttonClassName = `inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-100 px-5 py-3 text-base font-medium text-indigo-700 hover:bg-indigo-200`;
 
@@ -20,20 +20,20 @@ export function createDateString(date: string, now: string) {
       });
 }
 
-export function UserListItem({ user }: { user: SerializeFrom<User> }) {
+export function TodoListItem({ todo }: { todo: SerializeFrom<Todo> }) {
   return (
-    <li key={user.id}>
+    <li key={todo.id}>
       <div className="relative pb-8">
         <div className="relative flex space-x-3">
           <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
             <div>
               <p className="text-sm text-gray-500">
                 Created{" "}
-                <span className="font-medium text-gray-900">{user.name}</span>
+                <span className="font-medium text-gray-900">{todo.label}</span>
               </p>
             </div>
             <div className="whitespace-nowrap text-right text-sm text-gray-500">
-              <time dateTime={user.createdAt}>{user.createdAt}</time>
+              <time dateTime={todo.createdAt}>{todo.createdAt}</time>
             </div>
           </div>
         </div>

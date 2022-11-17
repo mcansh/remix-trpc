@@ -1,29 +1,35 @@
 import type { ActionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
-import { UserListItem, buttonClassName, createDateString } from "~/components";
+import { TRPCError } from "@trpc/server";
+import { buttonClassName, createDateString, TodoListItem } from "~/components";
 import { appRouter } from "~/trpc.server";
 
 export async function loader() {
   const caller = appRouter.createCaller({});
-  let users = await caller.users.list();
-  return { users, now: new Date() };
+  let todos = await caller.todos.list();
+  return { todos, now: new Date() };
 }
 
 export async function action({ request }: ActionArgs) {
   let caller = appRouter.createCaller({});
 
   let formData = await request.formData();
-  let name = formData.get("name");
+  let label = formData.get("label");
 
-  if (typeof name !== "string") {
-    throw json({ message: "expected name to be string" });
+  if (typeof label !== "string") {
+    return json({ message: "expected label to be string" }, { status: 400 });
   }
 
-  await caller.users.create({ name });
-
-  return redirect("/");
+  try {
+    await caller.todos.create({ label });
+    return null;
+  } catch (error) {
+    if (error instanceof TRPCError) {
+      return json({ message: error.message }, { status: 400 });
+    }
+    throw error;
+  }
 }
 
 export default function Index() {
@@ -36,13 +42,13 @@ export default function Index() {
       </Link>
 
       <ul>
-        {data.users.map((user) => {
+        {data.todos.map((todo) => {
           return (
-            <UserListItem
-              key={user.id}
-              user={{
-                ...user,
-                createdAt: createDateString(user.createdAt, data.now),
+            <TodoListItem
+              key={todo.id}
+              todo={{
+                ...todo,
+                createdAt: createDateString(todo.createdAt, data.now),
               }}
             />
           );

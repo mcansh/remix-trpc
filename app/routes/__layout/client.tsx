@@ -1,10 +1,11 @@
 import * as React from "react";
 import type { ActionArgs } from "@remix-run/node";
-import { defer, json, redirect } from "@remix-run/node";
+import { defer, json } from "@remix-run/node";
 import { Link, Await, useLoaderData } from "@remix-run/react";
 
 import { appRouter } from "~/trpc.server";
-import { UserListItem, buttonClassName, createDateString } from "~/components";
+import { TodoListItem, buttonClassName, createDateString } from "~/components";
+import { TRPCError } from "@trpc/server";
 
 export async function loader() {
   const caller = appRouter.createCaller({});
@@ -12,22 +13,28 @@ export async function loader() {
   // artificial delay to show suspense
   await new Promise((resolve) => setTimeout(resolve, 5_000));
 
-  return defer({ users: caller.users.list(), now: new Date() });
+  return defer({ todos: caller.todos.list(), now: new Date() });
 }
 
 export async function action({ request }: ActionArgs) {
   let caller = appRouter.createCaller({});
 
   let formData = await request.formData();
-  let name = formData.get("name");
+  let label = formData.get("label");
 
-  if (typeof name !== "string") {
-    throw json({ message: "expected name to be string" });
+  if (typeof label !== "string") {
+    return json({ message: "expected label to be string" }, { status: 400 });
   }
 
-  await caller.users.create({ name });
-
-  return redirect("/client");
+  try {
+    await caller.todos.create({ label });
+    return null;
+  } catch (error) {
+    if (error instanceof TRPCError) {
+      return json({ message: error.message }, { status: 400 });
+    }
+    throw error;
+  }
 }
 
 export default function ClientFetchPage() {
@@ -40,21 +47,24 @@ export default function ClientFetchPage() {
       </Link>
 
       <React.Suspense fallback={<div>Loading...</div>}>
-        <Await resolve={data.users}>
-          {(users) => {
-            if (typeof users === "undefined" || users.length === 0) {
-              return <div>No users</div>;
+        <Await resolve={data.todos}>
+          {(resolvedTodos) => {
+            if (
+              typeof resolvedTodos === "undefined" ||
+              resolvedTodos.length === 0
+            ) {
+              return <div>No todos</div>;
             }
 
             return (
               <ul>
-                {users.map((user) => {
+                {resolvedTodos.map((todo) => {
                   return (
-                    <UserListItem
-                      key={user.id}
-                      user={{
-                        ...user,
-                        createdAt: createDateString(user.createdAt, data.now),
+                    <TodoListItem
+                      key={todo.id}
+                      todo={{
+                        ...todo,
+                        createdAt: createDateString(todo.createdAt, data.now),
                       }}
                     />
                   );
