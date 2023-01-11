@@ -6,7 +6,6 @@ export default function Layout() {
   let formRef = React.useRef<HTMLFormElement>(null);
 
   React.useEffect(() => {
-    console.log(fetcher);
     if (fetcher.type === "done") {
       formRef.current?.reset();
     }
@@ -23,11 +22,15 @@ export default function Layout() {
         action="/?index"
       >
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="label"
+            className="block text-sm font-medium text-gray-700"
+          >
             Todo
           </label>
           <div className="mt-1">
             <input
+              id="label"
               type="text"
               name="label"
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"

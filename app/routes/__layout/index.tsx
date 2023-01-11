@@ -1,34 +1,65 @@
-import type { ActionArgs } from "@remix-run/node";
+import type { ActionArgs, LoaderArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { TRPCError } from "@trpc/server";
-import { buttonClassName, createDateString, TodoListItem } from "~/components";
+import { z } from "zod";
+import { zfd } from "zod-form-data";
+import { createDateString, TodoListItem } from "~/components";
+import { getUser } from "~/session.server";
 import { appRouter } from "~/trpc.server";
 
-export async function loader() {
-  const caller = appRouter.createCaller({});
+export async function loader({ request }: LoaderArgs) {
+  let user = await getUser(request);
+  let caller = appRouter.createCaller({ user });
   let todos = await caller.todos.list();
   return { todos, now: new Date() };
 }
 
 export async function action({ request }: ActionArgs) {
-  let caller = appRouter.createCaller({});
+  let user = await getUser(request);
+  let caller = appRouter.createCaller({ user });
 
   let formData = await request.formData();
-  let label = formData.get("label");
+  let intent = formData.get("intent");
 
-  if (typeof label !== "string") {
-    return json({ message: "expected label to be string" }, { status: 400 });
-  }
+  switch (intent) {
+    case "create": {
+      let schema = zfd.formData({ label: zfd.text(z.string().min(1)) });
+      let result = schema.safeParse(formData);
+      if (!result.success) {
+        return json(result.error.formErrors, { status: 422 });
+      }
 
-  try {
-    await caller.todos.create({ label });
-    return null;
-  } catch (error) {
-    if (error instanceof TRPCError) {
-      return json({ message: error.message }, { status: 400 });
+      try {
+        await caller.todos.create({ label: result.data.label });
+        return null;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          return json({ message: error.message }, { status: 422 });
+        }
+        throw error;
+      }
     }
-    throw error;
+    case "update": {
+      let schema = zfd.formData({
+        id: zfd.text(z.string().min(1)),
+        complete: zfd.checkbox(),
+      });
+      let result = schema.safeParse(formData);
+      if (!result.success) {
+        return json(result.error.formErrors, { status: 422 });
+      }
+
+      try {
+        await caller.todos.complete(result.data);
+        return null;
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          return json({ message: error.message }, { status: 422 });
+        }
+        throw error;
+      }
+    }
   }
 }
 
@@ -37,10 +68,6 @@ export default function Index() {
 
   return (
     <>
-      <Link className={buttonClassName} to="client">
-        View CSR
-      </Link>
-
       <ul>
         {data.todos.map((todo) => {
           return (
