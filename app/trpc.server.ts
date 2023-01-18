@@ -1,3 +1,4 @@
+import { redirect } from "@remix-run/node";
 import type { inferAsyncReturnType } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { initTRPC } from "@trpc/server";
@@ -99,16 +100,35 @@ export const appRouter = t.router({
   }),
 
   todos: t.router({
-    list: t.procedure.query(({ ctx }) => {
-      console.log({ ctx });
-      return db.todo.findMany({
-        where: { userId: ctx.user?.id },
-      });
-    }),
+    list: t.procedure
+      .input(
+        z
+          .object({
+            count: z.number().optional(),
+            skip: z.number().optional(),
+          })
+          .optional()
+      )
+      .query(async ({ ctx, input }) => {
+        if (!ctx.user) {
+          throw redirect("/login");
+        }
+        if (input) {
+          await new Promise((resolve) => setTimeout(resolve, 2_000));
+        }
+        return db.todo.findMany({
+          where: { userId: ctx.user.id },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: input?.count,
+          skip: input?.skip,
+        });
+      }),
 
     getById: t.procedure.input(z.string()).query(({ ctx, input }) => {
       if (!ctx.user) {
-        throw new TRPCError({ code: "UNAUTHORIZED" });
+        throw redirect("/login");
       }
 
       return db.todo.findUnique({ where: { id: input } });
@@ -123,7 +143,7 @@ export const appRouter = t.router({
       )
       .mutation(async ({ ctx, input }) => {
         if (!ctx.user) {
-          throw new TRPCError({ code: "UNAUTHORIZED" });
+          throw redirect("/login");
         }
 
         return db.todo.update({
@@ -136,7 +156,7 @@ export const appRouter = t.router({
       .input(z.object({ label: z.string().min(5) }))
       .mutation(async ({ ctx, input }) => {
         if (!ctx.user) {
-          throw new TRPCError({ code: "UNAUTHORIZED" });
+          throw redirect("/login");
         }
 
         return db.todo.create({

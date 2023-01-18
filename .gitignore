@@ -5,3 +5,6 @@ node_modules
 /public/build
 /app/styles/app.css
 .env
+
+/app/icons/heroicons.svg
+/app/components/heroicons.tsx
