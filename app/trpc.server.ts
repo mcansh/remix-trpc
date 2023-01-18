@@ -27,11 +27,12 @@ export const appRouter = t.router({
         })
       )
       .mutation(async ({ ctx, input }) => {
-        if (ctx.user)
+        if (ctx.user) {
           throw new TRPCError({
             code: "CONFLICT",
             message: "Already logged in",
           });
+        }
 
         let hashedPassword = await hash(input.password, 10);
 

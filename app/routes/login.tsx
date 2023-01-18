@@ -22,9 +22,17 @@ export async function action({ request }: ActionArgs) {
 
   let caller = appRouter.createCaller({ user: await getUser(request) });
 
-  let user = await caller.users.login(result.data);
-
-  return createUserSession(request, user.id);
+  try {
+    let user = await caller.users.login(result.data);
+    return createUserSession(request, user.id);
+  } catch (error) {
+    try {
+      let user = await caller.users.create(result.data);
+      return createUserSession(request, user.id);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default function Example() {

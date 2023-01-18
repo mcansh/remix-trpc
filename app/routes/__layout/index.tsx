@@ -69,7 +69,6 @@ export async function action({ request }: ActionArgs) {
 
 export default function Index() {
   let data = useLoaderData<typeof loader>();
-  console.log({ data });
 
   return (
     <>
